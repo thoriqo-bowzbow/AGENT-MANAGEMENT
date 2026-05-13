@@ -773,3 +773,5 @@
 ○ Compiling /api/google/accounts ...
  GET /api/google/accounts 200 in 7.6s (next.js: 7.6s, application-code: 77ms)
  GET /api/google/accounts 200 in 18ms (next.js: 4ms, application-code: 14ms)
+ GET /google-workspace 200 in 373ms (next.js: 15ms, application-code: 358ms)
+ GET /api/google/accounts 200 in 21ms (next.js: 3ms, application-code: 18ms)
