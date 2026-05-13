@@ -272,3 +272,35 @@ WhatsApp:
 - No coding/browser agent execution yet.
 - Token counts depend on provider metadata when available; otherwise Phase 2 uses a rough local estimate.
 - `npm audit` reports dependency warnings from the document parsing ecosystem; review or replace those packages before hardening for production.
+
+## Troubleshooting Operasional
+
+### `/api/embeddings/test` mengembalikan 500
+- Sebelum fix: endpoint crash jika 9Router tidak punya kredensial provider `openai`.
+- Setelah fix: endpoint mengembalikan 200 dengan payload `{ok: false, error, configured, modelName, gateway}`.
+- Arti: masalah bukan bug app, tapi konfigurasi gateway 9Router belum lengkap.
+
+### RouteSlug diabaikan saat setup 9Router
+- Sebelum fix: `upsertNineRouterConfig` mengabaikan `routeSlug` dan selalu pakai `general-main`.
+- Setelah fix: `routeSlug` dihormati, route aktif dipilih sesuai input.
+
+### Dimensi embedding tidak cocok
+- Sebelum fix: `cosineSimilarity` diam-diam memakai panjang minimal, bisa hasilkan skor salah.
+- Setelah fix: throw error jelas `Dimensi embedding tidak cocok: X vs Y`.
+
+### Delete gateway key tidak aktifkan pengganti
+- Sebelum fix: `deleteNineRouterKey` mencari replacement tanpa filter `status: ACTIVE`.
+- Setelah fix: hanya key `ACTIVE` yang dipilih sebagai pengganti.
+
+### Model kosong tidak dicek
+- Sebelum fix: `setActiveNineRouterRoute` dan `addNineRouterModel` bisa terima string kosong.
+- Setelah fix: validasi `modelName.trim()` wajib diisi.
+
+### Status readiness
+- Typecheck: ✅
+- Tests: ✅ (18/18)
+- Build: ✅
+- Endpoint crash: ✅ fixed
+- Error mapping: ✅ graceful
+- Regression tests: ✅ added
+- Docs: ✅ updated
