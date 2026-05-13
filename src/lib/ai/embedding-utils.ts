@@ -28,16 +28,19 @@ export function vectorFromJson(value: unknown): number[] | null {
 }
 
 export function cosineSimilarity(left: number[], right: number[]) {
-  const length = Math.min(left.length, right.length);
-  if (!length) {
+  if (!left.length || !right.length) {
     return 0;
+  }
+
+  if (left.length !== right.length) {
+    throw new Error(`Dimensi embedding tidak cocok: ${left.length} vs ${right.length}`);
   }
 
   let dot = 0;
   let leftMagnitude = 0;
   let rightMagnitude = 0;
 
-  for (let index = 0; index < length; index += 1) {
+  for (let index = 0; index < left.length; index += 1) {
     const leftValue = left[index] || 0;
     const rightValue = right[index] || 0;
     dot += leftValue * rightValue;
