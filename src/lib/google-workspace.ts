@@ -5,7 +5,7 @@
 
 import { google } from 'googleapis';
 import { prisma } from '@/lib/db';
-import { encrypt, decrypt } from '@/lib/crypto';
+import { encryptSecret, decryptSecret } from '@/lib/crypto';
 
 export interface GoogleOAuthConfig {
   clientId: string;
@@ -66,9 +66,9 @@ export async function storeGoogleAccount(
   scopes: string[],
   tokens: GoogleTokenSet
 ) {
-  const encryptedAccessToken = encrypt(tokens.access_token);
+  const encryptedAccessToken = encryptSecret(tokens.access_token);
   const encryptedRefreshToken = tokens.refresh_token
-    ? encrypt(tokens.refresh_token)
+    ? encryptSecret(tokens.refresh_token)
     : null;
 
   // Upsert account
@@ -144,7 +144,7 @@ export async function getValidAccessToken(
   // Check if token is still valid
   const now = new Date();
   if (accessTokenRecord.expiresAt && accessTokenRecord.expiresAt > now) {
-    return decrypt(accessTokenRecord.encryptedToken);
+    return decryptSecret(accessTokenRecord.encryptedToken);
   }
 
   // Token expired, need to refresh
@@ -158,7 +158,7 @@ export async function getValidAccessToken(
 
   const client = getOAuth2Client(config);
   client.setCredentials({
-    refresh_token: decrypt(refreshTokenRecord.encryptedToken),
+    refresh_token: decryptSecret(refreshTokenRecord.encryptedToken),
   });
 
   const { credentials } = await client.refreshAccessToken();
@@ -171,7 +171,7 @@ export async function getValidAccessToken(
   await prisma.googleToken.create({
     data: {
       googleAccountId: account.id,
-      encryptedToken: encrypt(credentials.access_token),
+      encryptedToken: encryptSecret(credentials.access_token),
       tokenType: 'access_token',
       expiresAt: credentials.expiry_date
         ? new Date(credentials.expiry_date)
@@ -274,7 +274,7 @@ export async function revokeGoogleAccount(
   if (refreshToken) {
     const client = getOAuth2Client(config);
     try {
-      await client.revokeToken(decrypt(refreshToken.encryptedToken));
+      await client.revokeToken(decryptSecret(refreshToken.encryptedToken));
     } catch (error) {
       console.error('Failed to revoke token with Google:', error);
       // Continue with local deletion even if revocation fails
