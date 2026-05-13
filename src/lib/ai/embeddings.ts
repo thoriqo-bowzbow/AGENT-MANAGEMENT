@@ -147,14 +147,27 @@ export async function embedText(input: string, modelName?: string) {
 }
 
 export async function testEmbeddingConfig() {
-  const embedding = await embedText("Riqo AI Hub embedding test.");
-  return {
-    ok: true,
-    modelName: embedding.modelName,
-    dimensions: embedding.dimensions,
-    gateway: embedding.gateway,
-    latencyMs: embedding.latencyMs,
-  };
+  try {
+    const embedding = await embedText("Riqo AI Hub embedding test.");
+    return {
+      ok: true,
+      modelName: embedding.modelName,
+      dimensions: embedding.dimensions,
+      gateway: embedding.gateway,
+      latencyMs: embedding.latencyMs,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const status = await getEmbeddingStatus().catch(() => null);
+
+    return {
+      ok: false,
+      error: message,
+      configured: status?.configured ?? false,
+      modelName: status?.modelName ?? DEFAULT_EMBEDDING_MODEL,
+      gateway: status?.gateway ?? null,
+    };
+  }
 }
 
 export function rankByEmbedding<T extends { vectorJson: unknown }>(queryVector: number[], items: T[]) {
