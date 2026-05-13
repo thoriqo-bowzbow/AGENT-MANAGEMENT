@@ -761,3 +761,4 @@
  GET /api/9router/gateways 200 in 25ms (next.js: 2ms, application-code: 23ms)
  GET /google-workspace 200 in 35ms (next.js: 9ms, application-code: 26ms)
  GET /google-workspace 200 in 146ms (next.js: 9ms, application-code: 137ms)
+✓ Compiled in 180ms
