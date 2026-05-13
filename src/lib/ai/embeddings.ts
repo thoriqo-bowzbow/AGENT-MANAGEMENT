@@ -80,6 +80,7 @@ export async function embedTexts(inputs: string[], modelName?: string) {
   const model = (modelName || settings.modelName || DEFAULT_EMBEDDING_MODEL).trim();
 
   try {
+    console.log(`[embeddings] requesting ${credential.baseUrl}/embeddings | model: ${model}`);
     const response = await fetch(`${credential.baseUrl}/embeddings`, {
       method: "POST",
       headers: {
@@ -94,10 +95,13 @@ export async function embedTexts(inputs: string[], modelName?: string) {
 
     if (!response.ok) {
       const text = await response.text();
+      console.error(`[embeddings] API error ${response.status}: ${text}`);
       throw new Error(`9Router embeddings gagal ${response.status}: ${text.slice(0, 300)}`);
     }
 
-    const parsed = parseEmbeddingResponse(await response.json());
+    const json = await response.json();
+    console.log(`[embeddings] response received, parsing...`);
+    const parsed = parseEmbeddingResponse(json);
     await prisma.providerApiKey.update({
       where: { id: credential.keyId },
       data: { requestCount: { increment: 1 }, lastUsedAt: new Date(), lastError: null },
@@ -120,6 +124,7 @@ export async function embedTexts(inputs: string[], modelName?: string) {
       },
     }));
   } catch (error) {
+    console.error(`[embeddings] critical error:`, error);
     await prisma.providerApiKey
       .update({
         where: { id: credential.keyId },
@@ -128,7 +133,7 @@ export async function embedTexts(inputs: string[], modelName?: string) {
           lastError: error instanceof Error ? error.message.slice(0, 300) : String(error).slice(0, 300),
         },
       })
-      .catch(() => undefined);
+      .catch((dbErr) => console.error(`[embeddings] DB update failed:`, dbErr));
     throw error;
   }
 }
