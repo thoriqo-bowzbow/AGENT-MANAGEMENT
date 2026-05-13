@@ -191,3 +191,4 @@
  GET /login 200 in 156ms (next.js: 50ms, application-code: 106ms)
  GET /login 200 in 62ms (next.js: 4ms, application-code: 59ms)
  GET /login 200 in 35ms (next.js: 4ms, application-code: 31ms)
+✓ Compiled in 110ms
