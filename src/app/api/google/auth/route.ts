@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireUserFromRequest } from '@/lib/auth';
 import { handleApi, readJson } from '@/lib/api-helpers';
-import { getOAuth2Client, getAuthorizationUrl, exchangeCodeForTokens, storeGoogleAccount, GOOGLE_WORKSPACE_SCOPES } from '@/lib/google-workspace';
+import { getOAuth2Client, exchangeCodeForTokens, storeGoogleAccount, GOOGLE_WORKSPACE_SCOPES } from '@/lib/google-workspace';
 import { z } from 'zod';
 
 const googleAuthSchema = z.object({
@@ -36,9 +36,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user email from token
-    const { credentials } = await client.getTokenInfo(tokens.access_token);
-    const email = credentials.email || 'unknown@google.com';
+    const tokenInfo = await client.getTokenInfo(tokens.access_token);
+    const email = tokenInfo.email || 'unknown@google.com';
 
     const account = await storeGoogleAccount(
       user.id,
