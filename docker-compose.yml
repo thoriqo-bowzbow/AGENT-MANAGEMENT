@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: riqo-ai-hub-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: riqo
+      POSTGRES_PASSWORD: riqo_dev_password
+      POSTGRES_DB: riqo_ai_hub
+    ports:
+      - "5432:5432"
+    volumes:
+      - riqo_ai_hub_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U riqo -d riqo_ai_hub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  riqo_ai_hub_pgdata:

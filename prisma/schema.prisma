@@ -1,0 +1,575 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+}
+
+enum ProviderType {
+  GEMINI
+  OPENAI_COMPATIBLE
+  OPENROUTER
+  ANTHROPIC
+  CUSTOM_OPENAI
+  LOCAL_OLLAMA
+}
+
+enum ApiKeyStatus {
+  ACTIVE
+  DISABLED
+  COOLDOWN
+  ERROR
+}
+
+enum RouteMode {
+  CHAT
+  CODING
+  AGENT
+  BROWSER
+}
+
+enum MessageRole {
+  SYSTEM
+  USER
+  ASSISTANT
+  TOOL
+}
+
+enum UsageStatus {
+  PENDING
+  SUCCESS
+  ERROR
+  FALLBACK
+}
+
+enum MemoryScope {
+  GLOBAL
+  USER
+  PROJECT
+  CONVERSATION
+}
+
+enum MemorySuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ToolCallStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RUNNING
+  SUCCESS
+  ERROR
+}
+
+enum ChannelType {
+  TELEGRAM
+  WHATSAPP
+}
+
+enum AgentRunStatus {
+  QUEUED
+  RUNNING
+  WAITING_APPROVAL
+  SUCCESS
+  ERROR
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         UserRole @default(OWNER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions          Session[]
+  conversations     Conversation[]
+  memories          Memory[]
+  documents         Document[]
+  usageLogs         UsageLog[]
+  auditLogs         AuditLog[]
+  googleAccounts    GoogleAccount[]
+  agents            Agent[]
+  projects          Project[]
+  memorySuggestions MemorySuggestion[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Provider {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  type      ProviderType
+  baseUrl   String?
+  isActive  Boolean      @default(true)
+  metadata  Json?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  apiKeys    ProviderApiKey[]
+  models     AiModel[]
+  routeSteps RouteStep[]
+  usageLogs  UsageLog[]
+}
+
+model ProviderApiKey {
+  id              String       @id @default(cuid())
+  providerId      String
+  label           String
+  encryptedSecret String
+  last4           String
+  status          ApiKeyStatus @default(ACTIVE)
+  priority        Int          @default(100)
+  requestCount    Int          @default(0)
+  errorCount      Int          @default(0)
+  lastUsedAt      DateTime?
+  cooldownUntil   DateTime?
+  lastError       String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  provider  Provider   @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  usageLogs UsageLog[]
+
+  @@index([providerId, status, priority, lastUsedAt])
+}
+
+model AiModel {
+  id                String   @id @default(cuid())
+  providerId        String
+  name              String
+  displayName       String
+  contextWindow     Int?
+  supportsStreaming Boolean  @default(true)
+  supportsVision    Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, name])
+  @@index([name])
+}
+
+model Route {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  mode        RouteMode @default(CHAT)
+  isDefault   Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  steps         RouteStep[]
+  conversations Conversation[]
+  usageLogs     UsageLog[]
+}
+
+model RouteStep {
+  id         String   @id @default(cuid())
+  routeId    String
+  providerId String
+  modelName  String
+  priority   Int      @default(100)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  route    Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([routeId, providerId, modelName])
+  @@index([routeId, priority])
+}
+
+model Conversation {
+  id            String    @id @default(cuid())
+  userId        String
+  routeId       String?
+  title         String
+  mode          RouteMode @default(CHAT)
+  memoryEnabled Boolean   @default(true)
+  isPinned      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  route             Route?              @relation(fields: [routeId], references: [id], onDelete: SetNull)
+  messages          Message[]
+  attachments       MessageAttachment[]
+  documents         Document[]
+  usageLogs         UsageLog[]
+  memories          Memory[]
+  memorySuggestions MemorySuggestion[]
+
+  @@index([userId, updatedAt])
+}
+
+model Message {
+  id             String      @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String
+  providerName   String?
+  modelName      String?
+  inputTokens    Int?
+  outputTokens   Int?
+  metadata       Json?
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  attachments  MessageAttachment[]
+
+  @@index([conversationId, createdAt])
+}
+
+model MessageAttachment {
+  id             String   @id @default(cuid())
+  conversationId String
+  messageId      String?
+  fileName       String
+  mimeType       String?
+  sizeBytes      Int?
+  storagePath    String?
+  extractedText  String?
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      Message?     @relation(fields: [messageId], references: [id], onDelete: SetNull)
+}
+
+model Memory {
+  id             String      @id @default(cuid())
+  userId         String?
+  projectId      String?
+  conversationId String?
+  scope          MemoryScope
+  title          String
+  content        String
+  isEnabled      Boolean     @default(true)
+  metadata       Json?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project      Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  embeddings   Embedding[]
+}
+
+model MemorySuggestion {
+  id                   String                 @id @default(cuid())
+  userId               String
+  sourceConversationId String?
+  title                String
+  content              String
+  scope                MemoryScope            @default(USER)
+  reason               String?
+  status               MemorySuggestionStatus @default(PENDING)
+  metadata             Json?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceConversation Conversation? @relation(fields: [sourceConversationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status, createdAt])
+  @@index([sourceConversationId])
+}
+
+model Document {
+  id             String   @id @default(cuid())
+  userId         String
+  conversationId String?
+  projectId      String?
+  title          String
+  fileName       String
+  mimeType       String?
+  sizeBytes      Int?
+  storagePath    String?
+  status         String   @default("UPLOADED")
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation?   @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  project      Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  chunks       DocumentChunk[]
+
+  @@index([userId, updatedAt])
+}
+
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  index      Int
+  content    String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  document   Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  embeddings Embedding[]
+
+  @@unique([documentId, index])
+}
+
+model Embedding {
+  id              String   @id @default(cuid())
+  providerName    String
+  modelName       String
+  dimensions      Int?
+  vectorJson      Json
+  memoryId        String?
+  documentChunkId String?
+  createdAt       DateTime @default(now())
+
+  memory        Memory?        @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  documentChunk DocumentChunk? @relation(fields: [documentChunkId], references: [id], onDelete: Cascade)
+
+  @@index([memoryId])
+  @@index([documentChunkId])
+}
+
+model ToolCall {
+  id             String         @id @default(cuid())
+  conversationId String?
+  agentRunId     String?
+  toolName       String
+  input          Json?
+  output         Json?
+  status         ToolCallStatus @default(PENDING)
+  riskLevel      String         @default("LOW")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  agentRun AgentRun? @relation(fields: [agentRunId], references: [id], onDelete: SetNull)
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+}
+
+model UsageLog {
+  id             String      @id @default(cuid())
+  userId         String?
+  providerId     String?
+  apiKeyId       String?
+  routeId        String?
+  conversationId String?
+  providerName   String
+  modelName      String
+  routeName      String?
+  status         UsageStatus @default(PENDING)
+  inputTokens    Int?
+  outputTokens   Int?
+  latencyMs      Int?
+  errorCode      String?
+  errorMessage   String?
+  startedAt      DateTime    @default(now())
+  completedAt    DateTime?
+  metadata       Json?
+
+  user         User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  provider     Provider?       @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  apiKey       ProviderApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  route        Route?          @relation(fields: [routeId], references: [id], onDelete: SetNull)
+  conversation Conversation?   @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([startedAt])
+  @@index([providerName, modelName])
+}
+
+model GoogleAccount {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String
+  scopes    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokens GoogleToken[]
+}
+
+model GoogleToken {
+  id              String    @id @default(cuid())
+  googleAccountId String
+  encryptedToken  String
+  tokenType       String
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  googleAccount GoogleAccount @relation(fields: [googleAccountId], references: [id], onDelete: Cascade)
+}
+
+model Channel {
+  id        String      @id @default(cuid())
+  type      ChannelType
+  name      String
+  isActive  Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  telegramConfig TelegramConfig?
+  whatsappConfig WhatsappConfig?
+}
+
+model TelegramConfig {
+  id                String   @id @default(cuid())
+  channelId         String   @unique
+  encryptedBotToken String
+  allowedChatIds    String[]
+  defaultRouteSlug  String?
+  safeMode          Boolean  @default(true)
+  fullAutoPilot     Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model WhatsappConfig {
+  id               String   @id @default(cuid())
+  channelId        String   @unique
+  sessionPath      String?
+  allowedNumbers   String[]
+  defaultRouteSlug String?
+  safeMode         Boolean  @default(true)
+  fullAutoPilot    Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model Agent {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  mode        RouteMode @default(AGENT)
+  config      Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  runs AgentRun[]
+}
+
+model AgentRun {
+  id        String         @id @default(cuid())
+  agentId   String
+  status    AgentRunStatus @default(QUEUED)
+  input     String
+  output    String?
+  state     Json?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  agent     Agent       @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  steps     AgentStep[]
+  toolCalls ToolCall[]
+}
+
+model AgentStep {
+  id         String   @id @default(cuid())
+  agentRunId String
+  stepIndex  Int
+  title      String
+  status     String
+  input      Json?
+  output     Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  agentRun AgentRun @relation(fields: [agentRunId], references: [id], onDelete: Cascade)
+
+  @@unique([agentRunId, stepIndex])
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  rootPath  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memories    Memory[]
+  documents   Document[]
+  fileIndexes ProjectFileIndex[]
+}
+
+model ProjectFileIndex {
+  id        String   @id @default(cuid())
+  projectId String
+  filePath  String
+  hash      String?
+  summary   String?
+  metadata  Json?
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, filePath])
+}
+
+model BrowserSession {
+  id        String   @id @default(cuid())
+  name      String
+  state     Json?
+  safeMode  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

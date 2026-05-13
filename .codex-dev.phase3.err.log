@@ -1,0 +1,13 @@
+Error: 9Router embeddings gagal 400: {"error":{"message":"No credentials for provider: openai","type":"invalid_request_error","code":"bad_request"}}
+    at embedTexts (src\lib\ai\embeddings.ts:97:13)
+    at async embedText (src\lib\ai\embeddings.ts:137:23)
+    at async testEmbeddingConfig (src\lib\ai\embeddings.ts:145:21)
+    at async (src\app\api\embeddings\test\route.ts:12:26)
+    at async handleApi (src\lib\api-helpers.ts:7:12)
+   95 |     if (!response.ok) {
+   96 |       const text = await response.text();
+>  97 |       throw new Error(`9Router embeddings gagal ${response.status}: ${text.slice(0, 300)}`);
+      |             ^
+   98 |     }
+   99 |
+  100 |     const parsed = parseEmbeddingResponse(await response.json());
