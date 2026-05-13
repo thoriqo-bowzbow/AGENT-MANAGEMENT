@@ -429,6 +429,8 @@ model GoogleAccount {
 
   user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   tokens GoogleToken[]
+
+  @@unique([userId, email])
 }
 
 model GoogleToken {
