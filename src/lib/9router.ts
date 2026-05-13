@@ -396,7 +396,7 @@ export async function deleteNineRouterKey(keyId: string) {
 
   if (wasActive) {
     const replacement = await prisma.providerApiKey.findFirst({
-      where: { providerId: key.providerId },
+      where: { providerId: key.providerId, status: ApiKeyStatus.ACTIVE },
       orderBy: [{ priority: "asc" }, { createdAt: "asc" }],
     });
 
