@@ -192,3 +192,4 @@
  GET /login 200 in 62ms (next.js: 4ms, application-code: 59ms)
  GET /login 200 in 35ms (next.js: 4ms, application-code: 31ms)
 ✓ Compiled in 110ms
+✓ Finished writing to filesystem cache in 20.9s
