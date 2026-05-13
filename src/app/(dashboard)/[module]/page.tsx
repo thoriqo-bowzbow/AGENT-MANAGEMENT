@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Bot, Brain, Code2, FileText, Globe, History, Plug, Workflow } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
+import { GoogleWorkspaceClient } from "@/components/google-workspace-client";
 
 const modules = {
   agents: {
@@ -67,6 +68,25 @@ export default async function FutureModulePage(context: Context) {
   }
 
   const Icon = item.icon;
+
+  // Google Workspace sudah aktif
+  if (module === "google-workspace") {
+    return (
+      <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="mx-auto max-w-4xl space-y-6">
+          <div>
+            <p className="text-xs uppercase tracking-[0.24em] text-cyan-200/70">{item.phase}</p>
+            <h2 className="mt-1 text-2xl font-semibold text-white">{item.title}</h2>
+            <p className="mt-2 text-sm text-slate-400">{item.description}</p>
+          </div>
+
+          <Card className="p-6">
+            <GoogleWorkspaceClient />
+          </Card>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 overflow-y-auto p-4 md:p-6">

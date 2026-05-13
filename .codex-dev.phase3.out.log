@@ -762,3 +762,14 @@
  GET /google-workspace 200 in 35ms (next.js: 9ms, application-code: 26ms)
  GET /google-workspace 200 in 146ms (next.js: 9ms, application-code: 137ms)
 ✓ Compiled in 180ms
+ GET /login 200 in 1428ms (next.js: 6ms, application-code: 1421ms)
+ GET /google-workspace 200 in 1891ms (next.js: 641ms, application-code: 1249ms)
+ GET /login 200 in 771ms (next.js: 212ms, application-code: 558ms)
+ GET /google-workspace 200 in 463ms (next.js: 87ms, application-code: 376ms)
+ GET /login 200 in 519ms (next.js: 202ms, application-code: 317ms)
+ GET /login 200 in 522ms (next.js: 155ms, application-code: 367ms)
+ GET /google-workspace 200 in 172ms (next.js: 14ms, application-code: 158ms)
+ GET /google-workspace 200 in 100ms (next.js: 11ms, application-code: 89ms)
+○ Compiling /api/google/accounts ...
+ GET /api/google/accounts 200 in 7.6s (next.js: 7.6s, application-code: 77ms)
+ GET /api/google/accounts 200 in 18ms (next.js: 4ms, application-code: 14ms)
