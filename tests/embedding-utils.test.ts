@@ -24,6 +24,10 @@ describe("embedding utils", () => {
     expect(cosineSimilarity([1, 0], [0, 1])).toBeCloseTo(0);
   });
 
+  it("rejects mismatched embedding dimensions", () => {
+    expect(() => cosineSimilarity([1, 0], [1])).toThrow("Dimensi embedding tidak cocok: 2 vs 1");
+  });
+
   it("reads vector JSON from arrays and strings", () => {
     expect(vectorFromJson([1, 2, 3])).toEqual([1, 2, 3]);
     expect(vectorFromJson("[1,2,3]")).toEqual([1, 2, 3]);
