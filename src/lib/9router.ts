@@ -221,15 +221,28 @@ export async function upsertNineRouterConfig(input: {
   routeSlug: string;
 }) {
   const provider = await getNineRouterProvider();
-  return upsertNineRouterGateway({
+  const result = await upsertNineRouterGateway({
     id: provider?.id,
     name: "9Router Gateway",
     baseUrl: input.baseUrl,
     apiKey: input.apiKey,
     keyLabel: "gateway-key",
     modelName: input.modelName,
-    makeActive: true,
+    makeActive: false,
   });
+
+  const refreshedProvider = await getNineRouterProvider();
+  if (!refreshedProvider) {
+    throw new Error("Gateway 9Router gagal dibuat.");
+  }
+
+  await setActiveNineRouterRoute({
+    providerId: refreshedProvider.id,
+    modelName: input.modelName,
+    routeSlug: input.routeSlug || DEFAULT_9ROUTER_ROUTE_SLUG,
+  });
+
+  return result;
 }
 
 export async function deleteNineRouterGateway(providerId: string) {
@@ -287,6 +300,10 @@ export async function setActiveNineRouterRoute(input: {
   }
 
   const modelName = input.modelName.trim();
+  if (!modelName) {
+    throw new Error("Nama combo/model wajib diisi.");
+  }
+
   const route = await getOrCreateGeneralRoute(input.routeSlug || DEFAULT_9ROUTER_ROUTE_SLUG);
 
   await prisma.aiModel.upsert({
@@ -418,6 +435,10 @@ export async function addNineRouterModel(providerId: string, modelName: string) 
   }
 
   const trimmed = modelName.trim();
+  if (!trimmed) {
+    throw new Error("Nama combo/model wajib diisi.");
+  }
+
   await prisma.aiModel.upsert({
     where: { providerId_name: { providerId, name: trimmed } },
     update: { displayName: trimmed, isActive: true },
