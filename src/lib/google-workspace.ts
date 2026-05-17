@@ -21,6 +21,80 @@ export interface GoogleTokenSet {
   token_type: string;
 }
 
+const GOOGLE_OAUTH_SETTING_KEY = 'google-oauth-config';
+
+function isPlaceholder(value: string) {
+  return !value || value.includes('your-') || value.includes('example');
+}
+
+function maskSecret(value: string) {
+  if (!value) return '';
+  if (value.length <= 8) return '••••';
+  return `${value.slice(0, 4)}••••${value.slice(-4)}`;
+}
+
+export function isGoogleOAuthConfigured(config: GoogleOAuthConfig) {
+  return Boolean(
+    config.clientId &&
+      config.clientSecret &&
+      config.redirectUri &&
+      !isPlaceholder(config.clientId) &&
+      !isPlaceholder(config.clientSecret)
+  );
+}
+
+export async function getGoogleOAuthConfig(): Promise<GoogleOAuthConfig> {
+  const setting = await prisma.setting.findUnique({
+    where: { key: GOOGLE_OAUTH_SETTING_KEY },
+  });
+
+  const saved = setting?.value as Partial<GoogleOAuthConfig> | null | undefined;
+
+  return {
+    clientId: saved?.clientId || process.env.GOOGLE_OAUTH_CLIENT_ID || '',
+    clientSecret: saved?.clientSecret || process.env.GOOGLE_OAUTH_CLIENT_SECRET || '',
+    redirectUri:
+      saved?.redirectUri ||
+      process.env.GOOGLE_OAUTH_REDIRECT_URI ||
+      'http://127.0.0.1:3000/api/google/callback',
+  };
+}
+
+export async function getGoogleOAuthConfigStatus() {
+  const config = await getGoogleOAuthConfig();
+
+  return {
+    configured: isGoogleOAuthConfigured(config),
+    clientId: config.clientId && !isPlaceholder(config.clientId) ? config.clientId : '',
+    clientSecretPreview:
+      config.clientSecret && !isPlaceholder(config.clientSecret)
+        ? maskSecret(config.clientSecret)
+        : '',
+    redirectUri: config.redirectUri,
+  };
+}
+
+export async function saveGoogleOAuthConfig(config: GoogleOAuthConfig) {
+  const existing = await getGoogleOAuthConfig();
+  const normalized = {
+    clientId: config.clientId.trim(),
+    clientSecret: config.clientSecret.trim() || existing.clientSecret,
+    redirectUri: config.redirectUri.trim(),
+  };
+
+  if (!isGoogleOAuthConfigured(normalized)) {
+    throw new Error('Client ID dan Client Secret Google wajib diisi dengan credential asli.');
+  }
+
+  await prisma.setting.upsert({
+    where: { key: GOOGLE_OAUTH_SETTING_KEY },
+    create: { key: GOOGLE_OAUTH_SETTING_KEY, value: normalized },
+    update: { value: normalized },
+  });
+
+  return getGoogleOAuthConfigStatus();
+}
+
 /**
  * Get OAuth2 client configured with credentials
  */

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireUserFromRequest } from '@/lib/auth';
 import { handleApi } from '@/lib/api-helpers';
-import { listGoogleAccounts, revokeGoogleAccount } from '@/lib/google-workspace';
+import { getGoogleOAuthConfig, listGoogleAccounts, revokeGoogleAccount } from '@/lib/google-workspace';
 
 export async function GET(request: NextRequest) {
   return handleApi(async () => {
@@ -24,11 +24,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const config = {
-      clientId: process.env.GOOGLE_OAUTH_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET || '',
-      redirectUri: process.env.GOOGLE_OAUTH_REDIRECT_URI || '',
-    };
+    const config = await getGoogleOAuthConfig();
 
     await revokeGoogleAccount(user.id, email, config);
 

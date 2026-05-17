@@ -1,7 +1,14 @@
 import { NextRequest } from 'next/server';
 import { requireUserFromRequest } from '@/lib/auth';
 import { handleApi } from '@/lib/api-helpers';
-import { getOAuth2Client, exchangeCodeForTokens, storeGoogleAccount, GOOGLE_WORKSPACE_SCOPES } from '@/lib/google-workspace';
+import {
+  exchangeCodeForTokens,
+  getGoogleOAuthConfig,
+  getOAuth2Client,
+  GOOGLE_WORKSPACE_SCOPES,
+  isGoogleOAuthConfigured,
+  storeGoogleAccount,
+} from '@/lib/google-workspace';
 
 export async function GET(request: NextRequest) {
   return handleApi(async () => {
@@ -16,15 +23,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const config = {
-      clientId: process.env.GOOGLE_OAUTH_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET || '',
-      redirectUri: process.env.GOOGLE_OAUTH_REDIRECT_URI || '',
-    };
+    const config = await getGoogleOAuthConfig();
 
-    if (!config.clientId || !config.clientSecret || !config.redirectUri) {
+    if (!isGoogleOAuthConfigured(config)) {
       return Response.json(
-        { ok: false, error: 'Google OAuth not configured' },
+        { ok: false, error: 'Google OAuth belum dikonfigurasi dari halaman Google Workspace.' },
         { status: 400 }
       );
     }

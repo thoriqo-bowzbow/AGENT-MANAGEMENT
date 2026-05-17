@@ -43,6 +43,8 @@ Nama aplikasi: Riqo AI Hub
 - Token refresh helper.
 - API client helper untuk Gmail, Drive, Calendar, Docs, Sheets.
 - UI `/google-workspace` untuk connected accounts.
+- UI setup Google OAuth Client ID/Secret dari `/google-workspace`, disimpan terenkripsi via settings lokal.
+- Endpoint config Google OAuth: `GET/PATCH /api/google/config`.
 - Belum lengkap: aksi runtime Gmail/Drive/Calendar/Docs/Sheets dari chat/tool layer.
 
 **Phase 5: Channels (ROADMAP, belum runtime aktif)**
@@ -67,7 +69,7 @@ Status proyek sudah bergerak melewati prioritas awal Phase 1 + fondasi Phase 2.
 Posisi kerja saat ini:
 - **Phase aktual: Phase 4 Google Workspace aktif sebagian**; Phase 1+2 dan Phase 3 Sprint sudah selesai (lihat README.md untuk detail lengkap).
 - Fitur aktif: web chat, streaming, history, 9Router gateway multi-instance, encrypted keys, usage log, memory CRUD + auto-suggest + semantic search, document upload/extraction/chunking/indexing + semantic search, embeddings via 9Router, internal `/v1` endpoints, export handoff.
-- Aktif sebagian: Google Workspace connect/disconnect + token helper.
+- Aktif sebagian: Google Workspace connect/disconnect + token helper + setup OAuth config dari UI.
 - Belum aktif: aksi runtime Gmail/Drive/Calendar/Docs/Sheets dari chat/tool layer, Telegram, WhatsApp, Coding Agent, Browser Agent, Full Auto Pilot (menu placeholder sudah ada).
 - Prioritas lama tetap jadi fondasi, tapi jangan menganggap proyek masih berhenti di Phase 1/2.
 - **Sebelum mulai edit/coding, jalankan full mesin dulu** (postgres, dev server, cek 9Router gateway aktif).
@@ -101,6 +103,7 @@ Jangan lanjut/ubah fitur besar berikut tanpa memastikan fondasi web chat + AI ro
 ## Larangan
 - Jangan membuat landing page/mockup kosong.
 - Jangan hardcode API key/token/secret.
+- Jangan simpan password/login credential plaintext ke AGENTS.md; pakai `.env` lokal gitignored atau password manager.
 - Jangan log secret penuh.
 - Jangan menghapus file penting tanpa alasan jelas.
 - Jangan mengubah arsitektur besar tanpa menjelaskan dampaknya.
