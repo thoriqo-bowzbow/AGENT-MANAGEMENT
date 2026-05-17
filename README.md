@@ -346,8 +346,12 @@ WhatsApp:
 
 ### Status readiness
 - Typecheck: ✅
-- Tests: ✅ (18/18)
+- Lint: ✅
+- Tests: ✅ (12/12)
 - Build: ✅
+- Local app: ✅ login page opens at `http://127.0.0.1:3000`
+- PostgreSQL: ✅ container healthy on port `5432`
+- 9Router local gateway: ⚠️ `http://localhost:20128/v1/models` not reachable during latest check
 - Endpoint crash: ✅ fixed
 - Error mapping: ✅ graceful
 - Regression tests: ✅ added

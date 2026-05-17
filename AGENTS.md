@@ -80,6 +80,7 @@ Posisi kerja saat ini:
 - Auto git sync tersedia lagi via `scripts/auto-git-sync.mjs`.
 - Command: `npm run auto-sync:once` untuk sekali sync, `npm run auto-sync` untuk watcher, `node scripts/auto-git-sync.mjs --dry-run` untuk simulasi.
 - Commit/push manual tetap boleh dipakai untuk task penting agar hasil terkontrol.
+- Verifikasi terakhir 2026-05-17: `npm run typecheck`, `npm run lint`, `npm run test` (12/12), dan `npm run build` berhasil; Postgres container healthy di port `5432`; app lokal terbuka sampai halaman login di `http://127.0.0.1:3000`; 9Router lokal `http://localhost:20128/v1/models` belum reachable (`http_code=000`), jadi chat AI runtime belum bisa diverifikasi penuh sampai 9Router dinyalakan.
 
 Jangan lanjut/ubah fitur besar berikut tanpa memastikan fondasi web chat + AI router dasar tetap bisa dites:
 - Telegram
