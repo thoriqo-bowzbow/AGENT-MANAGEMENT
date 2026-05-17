@@ -31,16 +31,18 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.codex-dev*.log
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
 !.env.example
 
-# vercel
+# vercel / netlify
 .vercel
+.netlify
 
-# typescript
+# typescript / generated
 *.tsbuildinfo
 next-env.d.ts
-
 /src/generated/prisma
+/src/generated/

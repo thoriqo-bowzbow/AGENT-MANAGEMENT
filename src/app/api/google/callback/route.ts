@@ -8,7 +8,6 @@ export async function GET(request: NextRequest) {
     const user = await requireUserFromRequest(request);
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
-    const state = searchParams.get('state');
 
     if (!code) {
       return Response.json(
@@ -43,12 +42,7 @@ export async function GET(request: NextRequest) {
     const tokenInfo = await client.getTokenInfo(tokens.access_token);
     const email = tokenInfo.email || 'unknown@google.com';
 
-    const account = await storeGoogleAccount(
-      user.id,
-      email,
-      GOOGLE_WORKSPACE_SCOPES,
-      tokens
-    );
+    await storeGoogleAccount(user.id, email, GOOGLE_WORKSPACE_SCOPES, tokens);
 
     // Redirect back to Google Workspace page with success message
     return Response.redirect(

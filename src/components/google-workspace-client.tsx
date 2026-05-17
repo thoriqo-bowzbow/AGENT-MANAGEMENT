@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Loader2, Plus, Trash2, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ export function GoogleWorkspaceClient() {
         setStatus(data.error || "Gagal membuat URL otorisasi");
         setBusy(false);
       }
-    } catch (error) {
+    } catch {
       setStatus("Gagal menghubungi server");
       setBusy(false);
     }
@@ -70,7 +71,7 @@ export function GoogleWorkspaceClient() {
         const data = await response.json();
         setStatus(data.error || "Gagal mencabut akun");
       }
-    } catch (error) {
+    } catch {
       setStatus("Gagal menghubungi server");
     } finally {
       setBusy(false);
@@ -111,7 +112,13 @@ export function GoogleWorkspaceClient() {
           <Card key={account.id} className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
               {account.picture ? (
-                <img src={account.picture} alt="" className="h-10 w-10 rounded-full" />
+                <Image
+                  src={account.picture}
+                  alt=""
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 rounded-full"
+                />
               ) : (
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-400">
                   <Workflow size={20} />

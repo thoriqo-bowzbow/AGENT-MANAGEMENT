@@ -291,7 +291,7 @@ export async function revokeGoogleAccount(
  * List all Google accounts for a user
  */
 export async function listGoogleAccounts(userId: string) {
-  return prisma.googleAccount.findMany({
+  const accounts = await prisma.googleAccount.findMany({
     where: { userId },
     select: {
       id: true,
@@ -302,6 +302,12 @@ export async function listGoogleAccounts(userId: string) {
     },
     orderBy: { createdAt: 'desc' },
   });
+
+  return accounts.map((account) => ({
+    ...account,
+    displayName: null,
+    picture: null,
+  }));
 }
 
 /**
