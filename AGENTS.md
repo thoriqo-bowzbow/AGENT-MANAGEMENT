@@ -45,7 +45,13 @@ Nama aplikasi: Riqo AI Hub
 - UI `/google-workspace` untuk connected accounts.
 - UI setup Google OAuth Client ID/Secret dari `/google-workspace`, disimpan terenkripsi via settings lokal.
 - Endpoint config Google OAuth: `GET/PATCH /api/google/config`.
-- Belum lengkap: aksi runtime Gmail/Drive/Calendar/Docs/Sheets dari chat/tool layer.
+- Runtime tool layer dari chat aktif awal/read-only:
+  - `/google` atau `/google help`.
+  - `/google accounts`.
+  - `/google gmail --q="from:example newer_than:7d"`.
+  - `/google drive --q="name contains 'laporan'"`.
+  - `/google calendar`.
+- Belum lengkap: aksi write Gmail/Drive/Calendar/Docs/Sheets dari chat/tool layer masih perlu approval checkpoint.
 
 **Phase 5: Channels (ROADMAP, belum runtime aktif)**
 - Telegram bot integration.
@@ -69,8 +75,8 @@ Status proyek sudah bergerak melewati prioritas awal Phase 1 + fondasi Phase 2.
 Posisi kerja saat ini:
 - **Phase aktual: Phase 4 Google Workspace aktif sebagian**; Phase 1+2 dan Phase 3 Sprint sudah selesai (lihat README.md untuk detail lengkap).
 - Fitur aktif: web chat, streaming, history, 9Router gateway multi-instance, encrypted keys, usage log, memory CRUD + auto-suggest + semantic search, document upload/extraction/chunking/indexing + semantic search, embeddings via 9Router, internal `/v1` endpoints, export handoff.
-- Aktif sebagian: Google Workspace connect/disconnect + token helper + setup OAuth config dari UI.
-- Belum aktif: aksi runtime Gmail/Drive/Calendar/Docs/Sheets dari chat/tool layer, Telegram, WhatsApp, Coding Agent, Browser Agent, Full Auto Pilot (menu placeholder sudah ada).
+- Aktif sebagian: Google Workspace connect/disconnect + token helper + setup OAuth config dari UI + runtime chat tools read-only untuk akun/Gmail search/Drive search/Calendar upcoming.
+- Belum aktif: aksi write Gmail/Drive/Calendar/Docs/Sheets dari chat/tool layer, Telegram, WhatsApp, Coding Agent, Browser Agent, Full Auto Pilot (menu placeholder sudah ada).
 - Prioritas lama tetap jadi fondasi, tapi jangan menganggap proyek masih berhenti di Phase 1/2.
 - **Sebelum mulai edit/coding, jalankan full mesin dulu** (postgres, dev server, cek 9Router gateway aktif).
 - Setelah pengodingan selesai dan tes CLI berhasil, **JANGAN LUPA CHECK SECARA LIVE DI BROWSER LOKAL**.
@@ -81,6 +87,7 @@ Posisi kerja saat ini:
 - Command: `npm run auto-sync:once` untuk sekali sync, `npm run auto-sync` untuk watcher, `node scripts/auto-git-sync.mjs --dry-run` untuk simulasi.
 - Commit/push manual tetap boleh dipakai untuk task penting agar hasil terkontrol.
 - Verifikasi terakhir 2026-05-17: `npm run typecheck`, `npm run lint`, `npm run test` (12/12), dan `npm run build` berhasil; Postgres container healthy di port `5432`; app lokal terbuka sampai halaman login di `http://127.0.0.1:3000`; 9Router lokal `http://localhost:20128/v1/models` belum reachable (`http_code=000`), jadi chat AI runtime belum bisa diverifikasi penuh sampai 9Router dinyalakan.
+- Update 2026-05-17: Google Workspace runtime chat tools read-only ditambahkan via `src/lib/google-tools.ts` dan `/api/chat/stream`; perintah `/google`, `/google accounts`, `/google gmail`, `/google drive`, `/google calendar`; CLI pass: `npm run typecheck`, `npm run lint`, `npm run test` (12/12), `npm run build`.
 
 Jangan lanjut/ubah fitur besar berikut tanpa memastikan fondasi web chat + AI router dasar tetap bisa dites:
 - Telegram

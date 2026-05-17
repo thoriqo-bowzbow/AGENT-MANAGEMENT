@@ -6,6 +6,7 @@ import { buildContextMessages } from "@/lib/ai/context";
 import { createRoutedChatStream, persistAssistantMessage, toRouterMessages } from "@/lib/ai/router";
 import { requireUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { detectGoogleToolIntent, runGoogleTool } from "@/lib/google-tools";
 import { handleApi, readJson } from "@/lib/api-helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getIpAddress, titleFromMessage } from "@/lib/utils";
@@ -74,6 +75,63 @@ export async function POST(request: NextRequest) {
             : conversation.title,
       },
     });
+
+    const googleIntent = detectGoogleToolIntent(body.message);
+
+    if (googleIntent) {
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          try {
+            const intro = "[Google Workspace]\n";
+            controller.enqueue(encoder.encode(intro));
+            const output = await runGoogleTool({
+              userId: user.id,
+              conversationId: conversation.id,
+              intent: googleIntent,
+            });
+            const assistantContent = `${intro}${output}`;
+            controller.enqueue(encoder.encode(output));
+            await persistAssistantMessage({
+              conversationId: conversation.id,
+              content: assistantContent,
+              providerName: "Google Workspace",
+              modelName: googleIntent.kind,
+              metadata: { tool: "google-workspace", intent: googleIntent },
+            });
+            await auditLog({
+              userId: user.id,
+              action: "google.tool.success",
+              entityType: "Conversation",
+              entityId: conversation.id,
+              metadata: { intent: googleIntent },
+              ipAddress: ip,
+            });
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Google Workspace tool failed";
+            const visibleError = `[Google Workspace error] ${message}`;
+            controller.enqueue(encoder.encode(visibleError));
+            await persistAssistantMessage({
+              conversationId: conversation.id,
+              content: visibleError,
+              providerName: "Google Workspace",
+              modelName: googleIntent.kind,
+              metadata: { tool: "google-workspace", intent: googleIntent, error: message },
+            });
+          } finally {
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          "content-type": "text/plain; charset=utf-8",
+          "cache-control": "no-cache, no-transform",
+          "x-conversation-id": conversation.id,
+        },
+      });
+    }
 
     const contextMessages = await buildContextMessages({
       userId: user.id,
