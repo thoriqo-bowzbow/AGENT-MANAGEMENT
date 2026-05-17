@@ -13,9 +13,19 @@ export async function POST(request: NextRequest) {
       redirectUri: process.env.GOOGLE_OAUTH_REDIRECT_URI || '',
     };
 
-    if (!config.clientId || !config.clientSecret || !config.redirectUri) {
+    const isPlaceholder =
+      config.clientId === 'your-google-oauth-client-id' ||
+      config.clientSecret === 'your-google-oauth-client-secret' ||
+      config.clientId.includes('your-') ||
+      config.clientSecret.includes('your-');
+
+    if (!config.clientId || !config.clientSecret || !config.redirectUri || isPlaceholder) {
       return Response.json(
-        { ok: false, error: 'Google OAuth not configured' },
+        {
+          ok: false,
+          error:
+            'Google OAuth belum dikonfigurasi. Isi GOOGLE_OAUTH_CLIENT_ID dan GOOGLE_OAUTH_CLIENT_SECRET di .env dengan credential asli dari Google Cloud Console.',
+        },
         { status: 400 }
       );
     }
