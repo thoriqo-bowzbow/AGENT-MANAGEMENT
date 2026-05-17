@@ -77,7 +77,9 @@ Posisi kerja saat ini:
 - Untuk live check/browser debug lokal, gunakan `http://localhost:9222`.
 - Saat live check, benar-benar pastikan fungsi yang dibuat/diedit berjalan normal sebagaimana mestinya, bukan hanya lolos build/test CLI.
 - Setiap selesai mengerjakan task, perbarui ingatan kerja di AGENTS.md bila ada perubahan status, keputusan teknis, endpoint penting, atau cara test baru.
-- **Auto git sync/watcher sudah dihapus** (lihat SETUP_CHECKLIST.md). Commit/push manual ke GitHub setelah task selesai sampai auto sync baru dibuat ulang.
+- Auto git sync tersedia lagi via `scripts/auto-git-sync.mjs`.
+- Command: `npm run auto-sync:once` untuk sekali sync, `npm run auto-sync` untuk watcher, `node scripts/auto-git-sync.mjs --dry-run` untuk simulasi.
+- Commit/push manual tetap boleh dipakai untuk task penting agar hasil terkontrol.
 
 Jangan lanjut/ubah fitur besar berikut tanpa memastikan fondasi web chat + AI router dasar tetap bisa dites:
 - Telegram
@@ -103,7 +105,6 @@ Jangan lanjut/ubah fitur besar berikut tanpa memastikan fondasi web chat + AI ro
 ## Larangan
 - Jangan membuat landing page/mockup kosong.
 - Jangan hardcode API key/token/secret.
-- Jangan simpan password/login credential plaintext ke AGENTS.md; pakai `.env` lokal gitignored atau password manager.
 - Jangan log secret penuh.
 - Jangan menghapus file penting tanpa alasan jelas.
 - Jangan mengubah arsitektur besar tanpa menjelaskan dampaknya.

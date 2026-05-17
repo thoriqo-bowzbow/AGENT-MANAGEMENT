@@ -1,8 +1,8 @@
 # Riqo AI Hub
 
-Riqo AI Hub adalah web app AI pribadi untuk PROYEK 21. Phase 1+2 fokus pada fondasi yang benar-benar bisa dipakai: web chat, streaming response, conversation history, provider management, encrypted multi API key, internal AI Router, round-robin dasar, fallback sederhana, dan usage log.
+Riqo AI Hub adalah web app AI pribadi untuk PROYEK 21. Phase 1+2 fokus pada fondasi yang benar-benar bisa dipakai: web chat, streaming response, conversation history, provider management, encrypted multi API key, internal AI Router, round-robin dasar, fallback sederhana, dan usage log. Phase 4 Google Workspace aktif sebagian: OAuth connect/disconnect, token terenkripsi, setup OAuth config dari UI, dan API helper Gmail/Drive/Calendar/Docs/Sheets.
 
-## Status Phase 1+2 + Phase 3 Sprint
+## Status Phase 1+2 + Phase 3 Sprint + Phase 4 Parsial
 
 Sudah berfungsi:
 
@@ -28,10 +28,15 @@ Sudah berfungsi:
 - Embeddings lewat 9Router `/v1/embeddings`, default model `text-embedding-3-small`.
 - Vector disimpan sementara di `Embedding.vectorJson`; pgvector masih roadmap optimasi berikutnya.
 - Upload dokumen langsung dari Chat untuk conversation context.
+- Google Workspace OAuth connect/disconnect.
+- Google Workspace OAuth Client ID/Secret bisa diisi dari UI `/google-workspace`.
+- Google OAuth config disimpan terenkripsi via local settings.
+- Endpoint config Google OAuth: `GET/PATCH /api/google/config`.
 
-Belum diaktifkan di Phase 1+2:
+Belum runtime aktif:
 
-- Google Workspace, Telegram, WhatsApp, Coding Agent, Browser Agent, dan Full Auto Pilot. Menu sudah ada sebagai placeholder jelas agar roadmap tetap rapi.
+- Aksi Gmail/Drive/Calendar/Docs/Sheets dari chat/tool layer belum aktif.
+- Telegram, WhatsApp, Coding Agent, Browser Agent, dan Full Auto Pilot belum aktif. Menu sudah ada sebagai placeholder jelas agar roadmap tetap rapi.
 
 ## Windows 11 Local Setup
 
@@ -159,6 +164,46 @@ Catatan: upload dibatasi 20MB per file pada mode lokal.
 4. Klik `Test embedding`.
 5. Jika 9Router belum menyediakan model embedding, Riqo tetap berjalan dengan fallback keyword. Setelah model siap, jalankan `Reindex all` di `Documents` dan edit/simpan ulang memory penting bila perlu.
 
+## Google Workspace OAuth Setup
+
+1. Buka `Google Workspace`.
+2. Isi `Client ID`, `Client Secret`, dan `Redirect URI`.
+3. Redirect URI lokal default: `http://127.0.0.1:3000/api/google/callback`.
+4. Klik `Save config`.
+5. Klik `Connect Google`.
+6. Login Google, approve scopes, lalu callback akan menyimpan token terenkripsi.
+7. `Connected accounts` akan menampilkan akun yang tersambung.
+8. Gunakan `Disconnect` untuk mencabut akun dari Riqo.
+
+Endpoint config:
+- `GET /api/google/config`
+- `PATCH /api/google/config`
+
+Catatan keamanan: OAuth secret disimpan terenkripsi di database/settings lokal. Jangan tulis password login, API key, token, atau client secret plaintext ke README/AGENTS/log.
+
+## Auto Git Sync
+
+Script tersedia:
+- `npm run auto-sync:once` → commit/push sekali jika ada perubahan.
+- `npm run auto-sync` → watcher interval.
+- `node scripts/auto-git-sync.mjs --dry-run` → cek perubahan tanpa commit/push.
+
+Env opsional:
+- `AUTO_GIT_SYNC_INTERVAL_MS=60000`
+- `AUTO_GIT_SYNC_REMOTE=origin`
+- `AUTO_GIT_SYNC_BRANCH=main`
+- `AUTO_GIT_SYNC_MESSAGE=auto-sync`
+- `AUTO_GIT_SYNC_DRY_RUN=1`
+
+Script melakukan:
+1. Cek worktree git.
+2. Skip jika clean.
+3. `git add -A`.
+4. Commit dengan timestamp.
+5. Push ke remote/branch target.
+6. Fallback ke plain `git push` jika push target gagal.
+7. Lock internal agar interval tidak overlap.
+
 ## Internal OpenAI-Compatible Endpoint
 
 Gunakan bearer token dari `RIQO_INTERNAL_API_TOKEN`:
@@ -201,6 +246,7 @@ Manual browser yang penting dicek:
 
 - `9Router Gateway`: tambah gateway, sync combo, pilih combo, tambah key, aktifkan key, hapus combo/key/gateway.
 - `Chat`: area input dan bubble assistant menampilkan gateway, combo, model aktual, dan gateway key.
+- `Google Workspace`: form OAuth config, validasi kosong, save config valid, connect/disconnect, list connected accounts.
 - `Settings`: `Test embedding` berhasil atau menampilkan error aman tanpa secret.
 - `Documents`: upload, reindex, semantic/keyword search menampilkan score dan match type.
 - `Memory`: suggest from chat, approve/reject, dan memory aktif ikut semantic retrieval.
@@ -238,9 +284,11 @@ npm run start
 Google OAuth:
 
 - Create OAuth client in Google Cloud Console.
-- Add redirect URI for your domain, later mapped to `/api/google/callback`.
+- Add redirect URI mapped to `/api/google/callback`.
+- Local redirect URI: `http://127.0.0.1:3000/api/google/callback`.
+- Configure Client ID/Secret from `Google Workspace` UI, not source code.
 - Use granular scopes for Gmail, Drive, Calendar, Docs, and Sheets.
-- Store refresh/access tokens encrypted with the same secret storage layer.
+- Refresh/access tokens are encrypted with the same secret storage layer.
 
 Telegram:
 
